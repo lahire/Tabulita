@@ -20,7 +20,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchProfile = async (userId: string) => {
+  const fetchProfile = async (userId: string, retries = 3) => {
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -34,8 +34,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       setProfile(data);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching profile:', error);
+
+      // Retry on lock errors
+      if (retries > 0 && error?.message?.includes('Lock broken')) {
+        console.log(`Retrying profile fetch... (${retries} attempts left)`);
+        await new Promise(resolve => setTimeout(resolve, 500));
+        return fetchProfile(userId, retries - 1);
+      }
     }
   };
 

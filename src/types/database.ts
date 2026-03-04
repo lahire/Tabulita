@@ -6,7 +6,7 @@
 // =====================================================
 // ENUMS
 // =====================================================
-export type UserRole = 'admin' | 'moderator' | 'member';
+export type UserRole = 'admin' | 'manager' | 'player';
 
 export type ItemType = 'unique' | 'rare' | 'currency' | 'gem' | 'other';
 
@@ -48,6 +48,7 @@ export interface League {
   start_date: string | null;
   end_date: string | null;
   is_active: boolean;
+  invite_code: string | null;
   created_by: string | null;
   created_at: string;
   updated_at: string;

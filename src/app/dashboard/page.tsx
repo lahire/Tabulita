@@ -3,11 +3,12 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function DashboardPage() {
-  const { user, profile, loading, signOut } = useAuth();
+  const { user, profile, loading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -15,11 +16,6 @@ export default function DashboardPage() {
       router.push('/login');
     }
   }, [user, loading, router]);
-
-  const handleSignOut = async () => {
-    await signOut();
-    router.push('/');
-  };
 
   if (loading) {
     return (
@@ -39,14 +35,9 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen p-8">
       <div className="max-w-7xl mx-auto">
-        <header className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-4xl font-bold">Dashboard</h1>
-            <p className="text-foreground/60 mt-2">Welcome back, {profile.username}!</p>
-          </div>
-          <Button variant="outline" onClick={handleSignOut}>
-            Sign Out
-          </Button>
+        <header className="mb-8">
+          <h1 className="text-4xl font-bold">Dashboard</h1>
+          <p className="text-foreground/60 mt-2">Welcome back, {profile.username}!</p>
         </header>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -80,9 +71,16 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground text-sm mb-4">
-                You&apos;re not a member of any leagues yet.
+                Manage your private leagues and coordinate with your group
               </p>
-              <Button>Create League</Button>
+              <div className="flex gap-2">
+                <Link href="/leagues">
+                  <Button>View Leagues</Button>
+                </Link>
+                <Link href="/leagues/new">
+                  <Button variant="outline">Create League</Button>
+                </Link>
+              </div>
             </CardContent>
           </Card>
 
