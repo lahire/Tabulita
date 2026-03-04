@@ -24,10 +24,8 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
 
-      - name: Clean install dependencies
-        run: |
-          rm -rf node_modules
-          npm install --prefer-offline --no-audit
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
 
       - name: Run linter
         run: npm run lint || true
