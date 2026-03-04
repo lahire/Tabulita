@@ -1,11 +1,14 @@
 'use client';
 
-import { useState, FormEvent } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { signUp } from '@/lib/auth';
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function SignupPage() {
   const router = useRouter();
@@ -16,11 +19,10 @@ export default function SignupPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError('');
 
-    // Validation
     if (username.length < 3 || username.length > 30) {
       setError('Username must be between 3 and 30 characters');
       return;
@@ -40,7 +42,6 @@ export default function SignupPage() {
 
     try {
       await signUp(email, password, username);
-      // Redirect to login or dashboard after successful signup
       router.push('/login');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to sign up');
@@ -51,85 +52,93 @@ export default function SignupPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-8">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold mb-2">Tabulita</h1>
-          <p className="text-foreground/60">Create your account</p>
-        </div>
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center">
+          <CardTitle className="text-3xl">Tabulita</CardTitle>
+          <CardDescription>Create your account</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {error && (
+              <Alert variant="destructive">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {error && (
-            <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500">
-              {error}
+            <div className="space-y-2">
+              <Label htmlFor="username">Username</Label>
+              <Input
+                id="username"
+                type="text"
+                placeholder="your_username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                required
+                minLength={3}
+                maxLength={30}
+                autoComplete="username"
+              />
             </div>
-          )}
 
-          <Input
-            id="username"
-            type="text"
-            label="Username"
-            placeholder="your_username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            required
-            minLength={3}
-            maxLength={30}
-            autoComplete="username"
-          />
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="your@email.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                autoComplete="email"
+              />
+            </div>
 
-          <Input
-            id="email"
-            type="email"
-            label="Email"
-            placeholder="your@email.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            autoComplete="email"
-          />
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={6}
+                autoComplete="new-password"
+              />
+            </div>
 
-          <Input
-            id="password"
-            type="password"
-            label="Password"
-            placeholder="••••••••"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            minLength={6}
-            autoComplete="new-password"
-          />
+            <div className="space-y-2">
+              <Label htmlFor="confirm-password">Confirm Password</Label>
+              <Input
+                id="confirm-password"
+                type="password"
+                placeholder="••••••••"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+                minLength={6}
+                autoComplete="new-password"
+              />
+            </div>
 
-          <Input
-            id="confirm-password"
-            type="password"
-            label="Confirm Password"
-            placeholder="••••••••"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            required
-            minLength={6}
-            autoComplete="new-password"
-          />
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? 'Creating account...' : 'Sign Up'}
+            </Button>
+          </form>
 
-          <Button type="submit" className="w-full" isLoading={loading}>
-            Sign Up
-          </Button>
-        </form>
-
-        <div className="mt-6 text-center space-y-4">
-          <p className="text-sm text-foreground/60">
-            Already have an account?{' '}
-            <Link href="/login" className="text-foreground hover:underline font-medium">
-              Sign in
+          <div className="mt-6 text-center space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Already have an account?{' '}
+              <Link href="/login" className="text-foreground hover:underline font-medium">
+                Sign in
+              </Link>
+            </p>
+            <Link href="/" className="text-sm text-muted-foreground hover:underline block">
+              ← Back to home
             </Link>
-          </p>
-
-          <Link href="/" className="text-sm text-foreground/60 hover:underline block">
-            ← Back to home
-          </Link>
-        </div>
-      </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
