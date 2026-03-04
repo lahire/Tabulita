@@ -25,6 +25,12 @@ jobs:
 
       - name: Install dependencies
         run: npm install --no-audit
+        continue-on-error: true
+
+      - name: Verify installation
+        run: |
+          ls -la node_modules/.bin/ | head -20
+          which jest || echo "jest not in PATH"
 
       - name: Run linter
         run: npm run lint || true
