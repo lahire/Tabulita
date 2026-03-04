@@ -137,3 +137,11 @@ dist
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+*.env
+
+# Project context file (local only)
+CLAUDE.md
+
+# Old env file
+env.env
