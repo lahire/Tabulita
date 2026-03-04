@@ -1,0 +1,5 @@
+node_modules
+.next
+.vscode
+buildspec.yml
+public/locale/i18n-*.ts
