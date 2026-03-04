@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { useAuth } from '@/contexts/AuthContext';
 import { signIn } from '@/lib/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,10 +13,20 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get('redirect') || '/dashboard';
+  const { user, loading: authLoading } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (!authLoading && user) {
+      router.push(redirectTo);
+    }
+  }, [user, authLoading, router, redirectTo]);
 
   const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -24,11 +35,15 @@ export default function LoginPage() {
 
     try {
       await signIn(email, password);
-      router.push('/dashboard');
-      router.refresh();
+
+      // Give auth state time to update, then redirect
+      setTimeout(() => {
+        router.push(redirectTo);
+        router.refresh();
+      }, 1000);
     } catch (err) {
+      console.error('Sign in error:', err);
       setError(err instanceof Error ? err.message : 'Failed to sign in');
-    } finally {
       setLoading(false);
     }
   };
