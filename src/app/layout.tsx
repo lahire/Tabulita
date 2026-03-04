@@ -13,11 +13,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className="antialiased">
-        <AuthProvider>
-          {children}
-        </AuthProvider>
+    <html lang="en" className="dark">
+      <body
+        className="antialiased text-foreground min-h-screen bg-cover bg-center bg-no-repeat bg-fixed"
+        style={{ backgroundImage: "url('/assets/Mirage_HighResKeyArt.png')" }}
+      >
+        <div className="min-h-screen bg-black/60">
+          <AuthProvider>
+            {children}
+          </AuthProvider>
+        </div>
       </body>
     </html>
   );

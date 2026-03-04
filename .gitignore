@@ -145,3 +145,9 @@ CLAUDE.md
 
 # Old env file
 env.env
+
+#vsCode
+/.vscode
+
+#claude
+/.claude
