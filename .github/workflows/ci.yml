@@ -22,15 +22,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
+          cache: 'npm'
 
       - name: Install dependencies
-        run: npm install --no-audit
-        continue-on-error: true
-
-      - name: Verify installation
-        run: |
-          ls -la node_modules/.bin/ | head -20
-          which jest || echo "jest not in PATH"
+        run: npm ci
 
       - name: Run linter
         run: npm run lint || true
