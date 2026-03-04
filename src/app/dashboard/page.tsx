@@ -3,7 +3,8 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import { Button } from '@/components/ui/Button';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function DashboardPage() {
   const { user, profile, loading, signOut } = useAuth();
@@ -43,51 +44,59 @@ export default function DashboardPage() {
             <h1 className="text-4xl font-bold">Dashboard</h1>
             <p className="text-foreground/60 mt-2">Welcome back, {profile.username}!</p>
           </div>
-          <Button variant="secondary" onClick={handleSignOut}>
+          <Button variant="outline" onClick={handleSignOut}>
             Sign Out
           </Button>
         </header>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <div className="p-6 rounded-lg border border-foreground/20">
-            <h2 className="text-xl font-semibold mb-2">Your Profile</h2>
-            <dl className="space-y-2 text-sm">
-              <div>
-                <dt className="text-foreground/60">Username:</dt>
-                <dd className="font-medium">{profile.username}</dd>
-              </div>
-              <div>
-                <dt className="text-foreground/60">Email:</dt>
-                <dd className="font-medium">{user.email}</dd>
-              </div>
-              {profile.poe_account_name && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Your Profile</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <dl className="space-y-2 text-sm">
                 <div>
-                  <dt className="text-foreground/60">PoE Account:</dt>
-                  <dd className="font-medium">{profile.poe_account_name}</dd>
+                  <dt className="text-muted-foreground">Username:</dt>
+                  <dd className="font-medium">{profile.username}</dd>
                 </div>
-              )}
-            </dl>
-          </div>
+                <div>
+                  <dt className="text-muted-foreground">Email:</dt>
+                  <dd className="font-medium">{user.email}</dd>
+                </div>
+                {profile.poe_account_name && (
+                  <div>
+                    <dt className="text-muted-foreground">PoE Account:</dt>
+                    <dd className="font-medium">{profile.poe_account_name}</dd>
+                  </div>
+                )}
+              </dl>
+            </CardContent>
+          </Card>
 
-          <div className="p-6 rounded-lg border border-foreground/20">
-            <h2 className="text-xl font-semibold mb-2">Your Leagues</h2>
-            <p className="text-foreground/60 text-sm">
-              You're not a member of any leagues yet.
-            </p>
-            <Button variant="primary" className="mt-4">
-              Create League
-            </Button>
-          </div>
+          <Card>
+            <CardHeader>
+              <CardTitle>Your Leagues</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground text-sm mb-4">
+                You&apos;re not a member of any leagues yet.
+              </p>
+              <Button>Create League</Button>
+            </CardContent>
+          </Card>
 
-          <div className="p-6 rounded-lg border border-foreground/20">
-            <h2 className="text-xl font-semibold mb-2">Your Wishlist</h2>
-            <p className="text-foreground/60 text-sm">
-              No items on your wishlist yet.
-            </p>
-            <Button variant="primary" className="mt-4">
-              Add Item
-            </Button>
-          </div>
+          <Card>
+            <CardHeader>
+              <CardTitle>Your Wishlist</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground text-sm mb-4">
+                No items on your wishlist yet.
+              </p>
+              <Button>Add Item</Button>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
