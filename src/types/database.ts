@@ -8,7 +8,7 @@
 // =====================================================
 export type UserRole = 'admin' | 'manager' | 'player';
 
-export type ItemType = 'unique' | 'rare' | 'currency' | 'gem' | 'other';
+export type ItemType = 'unique' | 'rare' | 'magic' | 'normal' | 'base';
 
 export type Priority = 'low' | 'medium' | 'high';
 
@@ -72,7 +72,8 @@ export interface WishlistItem {
   user_id: string;
   item_name: string;
   item_type: ItemType;
-  item_base_type: string | null;
+  wiki_url: string | null;
+  item_level: number | null;
   required_mods: RequiredMod[];
   notes: string | null;
   priority: Priority;

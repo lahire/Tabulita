@@ -1,4 +1,35 @@
 @import "tailwindcss";
+
+@font-face {
+  font-family: 'Fontin SmallCaps';
+  src: url('/fonts/Fontin-SmallCaps.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+body {
+    overflow: hidden;
+}
+
+* {
+    scrollbar-width: thin;
+    scrollbar-color: #444 transparent;
+}
+
+::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #444;
+    border-radius: 2px;
+}
 @plugin "tailwindcss-animate";
 
 @custom-variant dark (&:is(.dark *));

@@ -4,8 +4,8 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { WishlistTable } from '@/components/WishlistTable'
 import { ChevronDown } from 'lucide-react'
 import Link from 'next/link'
 import { getUserLeagues } from '@/lib/leagues'
@@ -81,17 +81,7 @@ export default function DashboardPage() {
           </div>
         </header>
 
-        <div className='grid gap-6 md:grid-cols-2 lg:grid-cols-3'>
-          <Card>
-            <CardHeader>
-              <CardTitle>Your Wishlist</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className='text-muted-foreground text-sm mb-4'>No items on your wishlist yet.</p>
-              <Button>Add Item</Button>
-            </CardContent>
-          </Card>
-        </div>
+        <WishlistTable leagueId={selectedLeague?.id ?? null} userId={user.id} />
       </div>
     </div>
   )

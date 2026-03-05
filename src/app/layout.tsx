@@ -19,7 +19,7 @@ export default function RootLayout({
         className="antialiased text-foreground min-h-screen bg-cover bg-center bg-no-repeat bg-fixed"
         style={{ backgroundImage: "url('/assets/Mirage_HighResKeyArt.png')" }}
       >
-        <div className="min-h-screen bg-black/60">
+        <div className="h-screen overflow-y-auto bg-black/60">
           <AuthProvider>
             <Navbar />
             {children}
