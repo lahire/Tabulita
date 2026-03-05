@@ -49,23 +49,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null)
-      if (session?.user) {
-        fetchProfile(session.user.id)
-      }
-      setLoading(false)
-    })
-
-    // Listen for auth changes
+    // onAuthStateChange fires INITIAL_SESSION on subscribe — no need for a separate getSession() call
+    // Having both caused lock contention in the Supabase auth-js mutex, hanging all DB queries on cold start
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null)
 
       if (session?.user) {
-        await fetchProfile(session.user.id)
+        // Do NOT await here — awaiting Supabase ops inside onAuthStateChange deadlocks
+        // because getSession() waits for initializePromise which waits for this callback to return
+        fetchProfile(session.user.id)
       } else {
         setProfile(null)
       }

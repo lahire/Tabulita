@@ -19,13 +19,6 @@ interface Props {
   onAdded: () => void
 }
 
-function withTimeout<T>(promise: Promise<T>, ms = 15000): Promise<T> {
-  return Promise.race([
-    promise,
-    new Promise<T>((_, reject) => setTimeout(() => reject(new Error('timeout')), ms)),
-  ])
-}
-
 function extractWikiSlug(url: string): string | null {
   const trimmed = url.trim()
   if (!trimmed) return null
@@ -52,7 +45,7 @@ export function AddItemDialog({ open, leagueId, userId, onClose, onAdded }: Prop
     }
     setSaving(true)
     try {
-      await withTimeout(addWishlistItem({
+      await addWishlistItem({
         league_id: leagueId,
         user_id: userId,
         item_name: itemName.trim(),
@@ -62,7 +55,7 @@ export function AddItemDialog({ open, leagueId, userId, onClose, onAdded }: Prop
         notes: notes.trim() || null,
         priority,
         status: 'needed',
-      }))
+      })
       fetch('/api/discord-notify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -79,8 +72,7 @@ export function AddItemDialog({ open, leagueId, userId, onClose, onAdded }: Prop
       toast.success('Item added!')
       handleClose()
       onAdded()
-    } catch (e) {
-      console.error('[addWishlistItem]', e)
+    } catch {
       toast.error('Failed to save item. Please try again.')
     } finally {
       setSaving(false)
