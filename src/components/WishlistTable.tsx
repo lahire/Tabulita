@@ -53,6 +53,7 @@ export function WishlistTable({ leagueId, userId }: Props) {
   const [sortKey, setSortKey] = useState<SortKey>('priority')
   const [sortDir, setSortDir] = useState<SortDir>('asc')
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('needed')
+  const [userFilter, setUserFilter] = useState<string | null>(null)
 
   function loadItems() {
     if (!leagueId) return
@@ -85,7 +86,9 @@ export function WishlistTable({ leagueId, userId }: Props) {
     )
   }
 
-  const filtered = statusFilter === 'all' ? items : items.filter((i) => i.status === statusFilter)
+  const filtered = items
+    .filter((i) => statusFilter === 'all' || i.status === statusFilter)
+    .filter((i) => !userFilter || i.profile.username.toLowerCase().includes(userFilter.toLowerCase()))
   const sorted = sortItems(filtered, sortKey, sortDir)
 
   const cols: { label: string; key: SortKey; className?: string }[] = [
@@ -105,20 +108,32 @@ export function WishlistTable({ leagueId, userId }: Props) {
       </div>
 
       {leagueId && (
-        <div className='flex items-center gap-1 mb-3'>
-          {STATUS_TABS.map(({ label, value }) => (
-            <button
-              key={value}
-              onClick={() => setStatusFilter(value)}
-              className={`text-xs px-3 py-1 rounded-full border transition-colors cursor-pointer ${
-                statusFilter === value
-                  ? 'bg-white/10 border-white/30 text-foreground'
-                  : 'border-white/10 text-muted-foreground hover:text-foreground hover:border-white/20'
-              }`}
-            >
-              {label}
-            </button>
-          ))}
+        <div className='flex items-center justify-between mb-3'>
+          <div className='flex items-center gap-1'>
+            {STATUS_TABS.map(({ label, value }) => (
+              <button
+                key={value}
+                onClick={() => setStatusFilter(value)}
+                className={`text-xs px-3 py-1 rounded-full border transition-colors cursor-pointer ${
+                  statusFilter === value
+                    ? 'bg-white/10 border-white/30 text-foreground'
+                    : 'border-white/10 text-muted-foreground hover:text-foreground hover:border-white/20'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          <div className='flex items-center gap-2'>
+            <span className='text-xs text-muted-foreground'>Player filter:</span>
+            <input
+              type='text'
+              value={userFilter ?? ''}
+              onChange={(e) => setUserFilter(e.target.value || null)}
+              placeholder='Filter...'
+              className='text-xs bg-transparent border border-white/10 rounded px-2 py-1 w-28 focus:outline-none focus:border-white/30 placeholder:text-white/20'
+            />
+          </div>
         </div>
       )}
 
@@ -131,7 +146,9 @@ export function WishlistTable({ leagueId, userId }: Props) {
         <p className='text-sm text-muted-foreground'>Join a league to start adding items to your wishlist.</p>
       ) : sorted.length === 0 ? (
         <p className='text-sm text-muted-foreground'>
-          {items.length === 0 ? 'No items in wishlist yet.' : `No ${statusFilter === 'all' ? '' : statusFilter + ' '}items.`}
+          {items.length === 0
+            ? 'No items in wishlist yet.'
+            : `No ${statusFilter === 'all' ? '' : statusFilter + ' '}items.`}
         </p>
       ) : (
         <div className='rounded-md border border-gray-600 bg-black/80'>
