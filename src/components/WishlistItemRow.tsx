@@ -32,11 +32,8 @@ const TYPE_COLORS: Record<string, { color: string; border: string }> = {
   other: { color: '#888888', border: '#555555' },
 }
 
-function withTimeout<T>(promise: Promise<T>, ms = 15000): Promise<T> {
-  return Promise.race([
-    promise,
-    new Promise<T>((_, reject) => setTimeout(() => reject(new Error('timeout')), ms)),
-  ])
+function withTimeout<T>(promise: Promise<T>, ms = 5000): Promise<T> {
+  return Promise.race([promise, new Promise<T>((_, reject) => setTimeout(() => reject(new Error('timeout')), ms))])
 }
 
 interface Props {
@@ -235,7 +232,15 @@ export function WishlistItemRow({ item, onRefresh }: Props) {
       </TableRow>
 
       {/* Found Dialog */}
-      <Dialog open={foundOpen} onOpenChange={(o) => { if (!o) { setFoundOpen(false); setMatchNotes('') } }}>
+      <Dialog
+        open={foundOpen}
+        onOpenChange={(o) => {
+          if (!o) {
+            setFoundOpen(false)
+            setMatchNotes('')
+          }
+        }}
+      >
         <DialogContent className='sm:max-w-sm'>
           <DialogHeader>
             <DialogTitle>Mark as Found</DialogTitle>
@@ -246,7 +251,9 @@ export function WishlistItemRow({ item, onRefresh }: Props) {
               <span className='text-foreground font-medium'>{item.profile.username}</span>.
             </p>
             <div className='space-y-1.5'>
-              <Label>Message <span className='text-muted-foreground font-normal'>(optional)</span></Label>
+              <Label>
+                Message <span className='text-muted-foreground font-normal'>(optional)</span>
+              </Label>
               <Input
                 placeholder='e.g. queda en el guild stash'
                 value={matchNotes}
@@ -256,7 +263,14 @@ export function WishlistItemRow({ item, onRefresh }: Props) {
             </div>
           </div>
           <DialogFooter>
-            <Button variant='outline' onClick={() => { setFoundOpen(false); setMatchNotes('') }} disabled={submittingFound}>
+            <Button
+              variant='outline'
+              onClick={() => {
+                setFoundOpen(false)
+                setMatchNotes('')
+              }}
+              disabled={submittingFound}
+            >
               Cancel
             </Button>
             <Button onClick={handleFoundConfirm} disabled={submittingFound}>
@@ -273,10 +287,17 @@ export function WishlistItemRow({ item, onRefresh }: Props) {
             <DialogTitle>{item.status === 'cancelled' ? 'Delete Permanently' : 'Cancel Item'}</DialogTitle>
           </DialogHeader>
           <p className='text-sm text-muted-foreground py-2'>
-            {item.status === 'cancelled'
-              ? <>Permanently delete <span className='text-foreground font-medium'>{item.item_name}</span>? This cannot be undone.</>
-              : <>Cancel <span className='text-foreground font-medium'>{item.item_name}</span> from <span className='text-foreground font-medium'>{item.profile.username}</span>&apos;s wishlist?</>
-            }
+            {item.status === 'cancelled' ? (
+              <>
+                Permanently delete <span className='text-foreground font-medium'>{item.item_name}</span>? This cannot be
+                undone.
+              </>
+            ) : (
+              <>
+                Cancel <span className='text-foreground font-medium'>{item.item_name}</span> from{' '}
+                <span className='text-foreground font-medium'>{item.profile.username}</span>&apos;s wishlist?
+              </>
+            )}
           </p>
           <DialogFooter>
             <Button variant='outline' onClick={() => setDeleteOpen(false)} disabled={deleting}>

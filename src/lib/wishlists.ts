@@ -28,10 +28,7 @@ export async function markItemFound(itemId: string, foundByUserId: string, match
 }
 
 export async function cancelWishlistItem(itemId: string) {
-  const { error } = await supabase
-    .from('wishlist_items')
-    .update({ status: 'cancelled' })
-    .eq('id', itemId)
+  const { error } = await supabase.from('wishlist_items').update({ status: 'cancelled' }).eq('id', itemId)
   if (error) throw error
 }
 
