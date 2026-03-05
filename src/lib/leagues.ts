@@ -129,32 +129,6 @@ export async function leaveLeague(leagueId: string, userId: string) {
 }
 
 /**
- * Remove a member from a league (admin/manager only)
- */
-export async function removeMember(leagueId: string, userId: string) {
-  const { error } = await supabase
-    .from('league_members')
-    .delete()
-    .eq('league_id', leagueId)
-    .eq('user_id', userId);
-
-  if (error) throw error;
-}
-
-/**
- * Update a member's role (admin only)
- */
-export async function updateMemberRole(leagueId: string, userId: string, newRole: UserRole) {
-  const { error } = await supabase
-    .from('league_members')
-    .update({ role: newRole })
-    .eq('league_id', leagueId)
-    .eq('user_id', userId);
-
-  if (error) throw error;
-}
-
-/**
  * Get user's role in a league
  */
 export async function getUserRoleInLeague(leagueId: string, userId: string): Promise<UserRole | null> {
@@ -171,14 +145,6 @@ export async function getUserRoleInLeague(leagueId: string, userId: string): Pro
   }
 
   return data.role;
-}
-
-/**
- * Check if user can manage league (admin or manager)
- */
-export async function canManageLeague(leagueId: string, userId: string): Promise<boolean> {
-  const role = await getUserRoleInLeague(leagueId, userId);
-  return role === 'admin' || role === 'manager';
 }
 
 /**

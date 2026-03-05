@@ -13,6 +13,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 export default function SignupPage() {
   const router = useRouter();
   const [username, setUsername] = useState('');
+  const [discordUsername, setDiscordUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -25,6 +26,11 @@ export default function SignupPage() {
 
     if (username.length < 3 || username.length > 30) {
       setError('Username must be between 3 and 30 characters');
+      return;
+    }
+
+    if (!discordUsername.trim()) {
+      setError('Discord username is required');
       return;
     }
 
@@ -41,7 +47,7 @@ export default function SignupPage() {
     setLoading(true);
 
     try {
-      await signUp(email, password, username);
+      await signUp(email, password, username, discordUsername);
       router.push('/login');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to sign up');
@@ -77,6 +83,18 @@ export default function SignupPage() {
                 minLength={3}
                 maxLength={30}
                 autoComplete="username"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="discord-username">Discord Username</Label>
+              <Input
+                id="discord-username"
+                type="text"
+                placeholder="yourname"
+                value={discordUsername}
+                onChange={(e) => setDiscordUsername(e.target.value)}
+                required
               />
             </div>
 
