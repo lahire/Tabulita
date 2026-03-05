@@ -1,25 +1,14 @@
-/**
- * Authentication helper functions
- * Wraps Supabase Auth with type-safe functions
- */
-
 import { supabase } from './supabase';
-import type { User } from '@supabase/supabase-js';
-import type { ProfileUpdate } from '@/types/database';
-
-export interface AuthUser extends User {
-  username?: string;
-  poe_account_name?: string;
-}
 
 // Sign up with email and password
-export async function signUp(email: string, password: string, username: string) {
+export async function signUp(email: string, password: string, username: string, discord_username: string) {
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
       data: {
         username,
+        discord_username,
       },
     },
   });
@@ -48,65 +37,18 @@ export async function signOut() {
   if (error) throw error;
 }
 
-// Get current session
-export async function getSession() {
-  const { data, error } = await supabase.auth.getSession();
+// Delete account
+export async function deleteAccount() {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) throw new Error('Not authenticated');
 
-  if (error) throw error;
-
-  return data.session;
-}
-
-// Get current user
-export async function getCurrentUser() {
-  const { data, error } = await supabase.auth.getUser();
-
-  if (error) throw error;
-
-  return data.user;
-}
-
-// Get user profile
-export async function getUserProfile(userId: string) {
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', userId)
-    .single();
-
-  if (error) throw error;
-
-  return data;
-}
-
-// Update user profile
-export async function updateProfile(userId: string, updates: ProfileUpdate) {
-  const { data, error } = await supabase
-    .from('profiles')
-    .update(updates)
-    .eq('id', userId)
-    .select()
-    .single();
-
-  if (error) throw error;
-
-  return data;
-}
-
-// Reset password (send email)
-export async function resetPassword(email: string) {
-  const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${window.location.origin}/auth/reset-password`,
+  const res = await fetch('/api/delete-account', {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${session.access_token}` },
   });
-
-  if (error) throw error;
-}
-
-// Update password
-export async function updatePassword(newPassword: string) {
-  const { error } = await supabase.auth.updateUser({
-    password: newPassword,
-  });
-
-  if (error) throw error;
+  if (!res.ok) {
+    const { error } = await res.json();
+    throw new Error(error ?? 'Failed to delete account');
+  }
+  await supabase.auth.signOut();
 }

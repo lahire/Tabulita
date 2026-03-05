@@ -46,7 +46,7 @@ export function Navbar() {
               <DropdownMenu modal={false}>
                 <DropdownMenuTrigger asChild>
                   <Button variant='ghost' size='sm'>
-                    {user?.user_metadata?.username || profile?.username}
+                    {profile?.username}
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align='end'>

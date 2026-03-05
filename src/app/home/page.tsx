@@ -55,7 +55,7 @@ export default function DashboardPage() {
     <div className='min-h-screen p-8'>
       <div className='max-w-7xl mx-auto'>
         <header className='mb-8 flex items-center justify-between'>
-          <h1 className='text-xl text-muted-foreground'>{user.user_metadata.username} returns!</h1>
+          <h1 className='text-xl text-muted-foreground'>{profile?.username} returns!</h1>
           <div className='flex items-center gap-3'>
             <span className='text-sm text-muted-foreground'>Your Leagues</span>
             {leagues.length > 0 ? (

@@ -2,13 +2,16 @@
 
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { deleteAccount } from '@/lib/auth'
 
 export default function ProfilePage() {
   const { user, profile, loading } = useAuth()
   const router = useRouter()
+  const [confirming, setConfirming] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   useEffect(() => {
     if (!loading && !user) {
@@ -25,6 +28,17 @@ export default function ProfilePage() {
   }
 
   if (!user || !profile) return null
+
+  async function handleDeleteAccount() {
+    setDeleting(true)
+    try {
+      await deleteAccount()
+      router.push('/signup')
+    } catch {
+      setDeleting(false)
+      setConfirming(false)
+    }
+  }
 
   return (
     <div className='min-h-screen p-8'>
@@ -45,18 +59,42 @@ export default function ProfilePage() {
                 <dd className='font-medium mt-0.5'>{profile.username}</dd>
               </div>
               <div>
+                <dt className='text-muted-foreground'>Discord</dt>
+                <dd className='font-medium mt-0.5'>{profile.discord_username ?? '—'}</dd>
+              </div>
+              <div>
                 <dt className='text-muted-foreground'>Email</dt>
                 <dd className='font-medium mt-0.5'>{user.email}</dd>
               </div>
-              {profile.poe_account_name && (
-                <div>
-                  <dt className='text-muted-foreground'>PoE Account</dt>
-                  <dd className='font-medium mt-0.5'>{profile.poe_account_name}</dd>
-                </div>
-              )}
             </dl>
           </CardContent>
         </Card>
+
+        <div className='mt-8 pt-6 border-t border-red-900/40'>
+          <p className='text-sm text-muted-foreground mb-3'>
+            Deleting your account is permanent and cannot be undone.
+          </p>
+          {!confirming ? (
+            <Button variant='destructive' size='sm' onClick={() => setConfirming(true)}>
+              Delete Account
+            </Button>
+          ) : (
+            <div className='flex items-center gap-3'>
+              <span className='text-sm text-red-400'>Are you sure?</span>
+              <Button
+                variant='destructive'
+                size='sm'
+                disabled={deleting}
+                onClick={handleDeleteAccount}
+              >
+                {deleting ? 'Deleting...' : 'Yes, delete'}
+              </Button>
+              <Button variant='outline' size='sm' onClick={() => setConfirming(false)}>
+                Cancel
+              </Button>
+            </div>
+          )}
+        </div>
 
       </div>
     </div>

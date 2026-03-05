@@ -8,130 +8,18 @@ import { AddItemDialog } from '@/components/AddItemDialog'
 import { getLeagueWishlist } from '@/lib/wishlists'
 import type { WishlistItemWithUser } from '@/types/database'
 import { ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react'
-
-function p(username: string) {
-  return {
-    id: username,
-    username,
-    discord_username: null,
-    poe_account_name: null,
-    avatar_url: null,
-    created_at: '',
-    updated_at: '',
-  }
-}
-
-const W = 'https://www.poewiki.net/wiki/'
-
-function item(
-  id: string,
-  item_name: string,
-  item_type: WishlistItemWithUser['item_type'],
-  wiki_url: string | null,
-  item_level: number | null,
-  priority: WishlistItemWithUser['priority'],
-  notes: string | null,
-  username: string
-): WishlistItemWithUser {
-  return {
-    id,
-    league_id: 'mock',
-    user_id: username,
-    item_name,
-    item_type,
-    wiki_url,
-    item_level,
-    required_mods: [],
-    notes,
-    priority,
-    status: 'needed',
-    created_at: '',
-    updated_at: '',
-    profile: p(username),
-  }
-}
-
-const MOCK_ITEMS: WishlistItemWithUser[] = [
-  item(
-    '1',
-    'Mjölner',
-    'unique',
-    W + 'Mj%C3%B6lner',
-    60,
-    'high',
-    'Need for CWC Lightning build, at least 3 red sockets',
-    'pablo'
-  ),
-  item('2', 'Headhunter', 'unique', W + 'Headhunter', null, 'high', 'Any roll works', 'carlos'),
-  item('3', 'Mageblood', 'unique', W + 'Mageblood', null, 'high', null, 'pablo'),
-  item(
-    '4',
-    "Watcher's Eye",
-    'unique',
-    W + 'Watcher%27s_Eye',
-    null,
-    'high',
-    'Need Vitality life regen or Hatred crit mod',
-    'mati'
-  ),
-  item('5', 'Melding of the Flesh', 'unique', W + 'Melding_of_the_Flesh', null, 'high', null, 'juli'),
-  item(
-    '6',
-    'Brass Dome',
-    'unique',
-    W + 'The_Brass_Dome',
-    null,
-    'medium',
-    'Max roll preferred but not required',
-    'Bubu'
-  ),
-  item('7', 'Lethal Pride', 'unique', W + 'Lethal_Pride', null, 'medium', 'Ryslatha or Kiloava version', 'pablo'),
-  item('8', 'The Adorned', 'unique', W + 'The_Adorned', null, 'medium', null, 'mati'),
-  item(
-    '9',
-    'Large Cluster Jewel',
-    'base',
-    W + 'Large_Cluster_Jewel',
-    84,
-    'medium',
-    '8 passive, Added Small Passive Skills grant: Damage over Time Multiplier',
-    'juli'
-  ),
-  item(
-    '10',
-    'Medium Cluster Jewel',
-    'base',
-    W + 'Medium_Cluster_Jewel',
-    75,
-    'medium',
-    'Precise Commander + Replenishing Presence',
-    'carlos'
-  ),
-  item('11', 'Small Cluster Jewel', 'base', W + 'Small_Cluster_Jewel', null, 'low', 'Feast of Flesh notable', 'pablo'),
-  item(
-    '12',
-    'Botas con Vida y Resistencias',
-    'rare',
-    W + 'Two-Toned_Boots_(Fire_and_Cold_Resistance)',
-    86,
-    'medium',
-    'T1 life, res capped, 30%+ movespeed, evasion base',
-    'mati'
-  ),
-  item(
-    '13',
-    'Guantes Evasion Raro',
-    'rare',
-    W + 'Slink_Gloves',
-    85,
-    'low',
-    'Need attackspeed + crit chance or flat phys',
-    'juli'
-  ),
-]
+import type { WishlistStatus } from '@/types/database'
 
 type SortKey = 'item_name' | 'item_type' | 'item_level' | 'priority' | 'username'
 type SortDir = 'asc' | 'desc'
+type StatusFilter = WishlistStatus | 'all'
+
+const STATUS_TABS: { label: string; value: StatusFilter }[] = [
+  { label: 'Needed', value: 'needed' },
+  { label: 'Found', value: 'found' },
+  { label: 'Cancelled', value: 'cancelled' },
+  { label: 'All', value: 'all' },
+]
 
 const PRIORITY_ORDER = { high: 0, medium: 1, low: 2 }
 
@@ -159,17 +47,18 @@ interface Props {
 }
 
 export function WishlistTable({ leagueId, userId }: Props) {
-  const [items, setItems] = useState<WishlistItemWithUser[]>(MOCK_ITEMS)
+  const [items, setItems] = useState<WishlistItemWithUser[]>([])
   const [loading, setLoading] = useState(false)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [sortKey, setSortKey] = useState<SortKey>('priority')
   const [sortDir, setSortDir] = useState<SortDir>('asc')
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('needed')
 
   function loadItems() {
     if (!leagueId) return
     setLoading(true)
     getLeagueWishlist(leagueId).then((data) => {
-      setItems(data.length > 0 ? data : MOCK_ITEMS)
+      setItems(data)
       setLoading(false)
     })
   }
@@ -196,7 +85,8 @@ export function WishlistTable({ leagueId, userId }: Props) {
     )
   }
 
-  const sorted = sortItems(items, sortKey, sortDir)
+  const filtered = statusFilter === 'all' ? items : items.filter((i) => i.status === statusFilter)
+  const sorted = sortItems(filtered, sortKey, sortDir)
 
   const cols: { label: string; key: SortKey; className?: string }[] = [
     { label: 'Item', key: 'item_name', className: 'w-[30%]' },
@@ -209,18 +99,40 @@ export function WishlistTable({ leagueId, userId }: Props) {
     <div>
       <div className='flex items-center justify-between mb-4'>
         <h2 className='text-sm font-medium'>Wishlist</h2>
-        <Button size='sm' variant='outline' onClick={() => setDialogOpen(true)}>
+        <Button size='sm' variant='outline' disabled={!leagueId} onClick={() => setDialogOpen(true)}>
           Add Item
         </Button>
       </div>
+
+      {leagueId && (
+        <div className='flex items-center gap-1 mb-3'>
+          {STATUS_TABS.map(({ label, value }) => (
+            <button
+              key={value}
+              onClick={() => setStatusFilter(value)}
+              className={`text-xs px-3 py-1 rounded-full border transition-colors cursor-pointer ${
+                statusFilter === value
+                  ? 'bg-white/10 border-white/30 text-foreground'
+                  : 'border-white/10 text-muted-foreground hover:text-foreground hover:border-white/20'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
 
       {loading ? (
         <div className='flex items-center gap-2 text-sm text-muted-foreground'>
           <div className='animate-spin rounded-full h-4 w-4 border-b-2 border-foreground' />
           Loading...
         </div>
-      ) : items.length === 0 ? (
-        <p className='text-sm text-muted-foreground'>No items in wishlist yet.</p>
+      ) : !leagueId ? (
+        <p className='text-sm text-muted-foreground'>Join a league to start adding items to your wishlist.</p>
+      ) : sorted.length === 0 ? (
+        <p className='text-sm text-muted-foreground'>
+          {items.length === 0 ? 'No items in wishlist yet.' : `No ${statusFilter === 'all' ? '' : statusFilter + ' '}items.`}
+        </p>
       ) : (
         <div className='rounded-md border border-gray-600 bg-black/80'>
           <Table>
@@ -243,7 +155,7 @@ export function WishlistTable({ leagueId, userId }: Props) {
             </TableHeader>
             <TableBody>
               {sorted.map((item) => (
-                <WishlistItemRow key={item.id} item={item} />
+                <WishlistItemRow key={item.id} item={item} onRefresh={loadItems} />
               ))}
             </TableBody>
           </Table>

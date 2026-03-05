@@ -1,28 +1,15 @@
 'use client'
 
 import { useState } from 'react'
+import { toast } from 'sonner'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { PoeItemTooltip } from '@/components/PoeItemTooltip'
-import { fetchPoeItem, type PoeItemData } from '@/lib/poeWikiApi'
 import { addWishlistItem } from '@/lib/wishlists'
+import { useAuth } from '@/contexts/AuthContext'
 import type { Priority, ItemType } from '@/types/database'
-
-function parseWikiName(url: string): string | null {
-  try {
-    const parsed = new URL(url)
-    if (!parsed.hostname.includes('poewiki.net')) return null
-    const segments = parsed.pathname.split('/')
-    const wikiIndex = segments.indexOf('wiki')
-    if (wikiIndex === -1 || !segments[wikiIndex + 1]) return null
-    return decodeURIComponent(segments[wikiIndex + 1].replace(/_/g, ' '))
-  } catch {
-    return null
-  }
-}
 
 interface Props {
   open: boolean
@@ -32,85 +19,81 @@ interface Props {
   onAdded: () => void
 }
 
+function withTimeout<T>(promise: Promise<T>, ms = 15000): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) => setTimeout(() => reject(new Error('timeout')), ms)),
+  ])
+}
+
+function extractWikiSlug(url: string): string | null {
+  const trimmed = url.trim()
+  if (!trimmed) return null
+  const idx = trimmed.indexOf('wiki/')
+  if (idx === -1) return null
+  const slug = trimmed.slice(idx + 5)
+  return slug || null
+}
+
 export function AddItemDialog({ open, leagueId, userId, onClose, onAdded }: Props) {
+  const { profile } = useAuth()
+  const [itemName, setItemName] = useState('')
   const [wikiUrl, setWikiUrl] = useState('')
-  const [manualName, setManualName] = useState('')
-  const [preview, setPreview] = useState<PoeItemData | null>(null)
-  const [previewing, setPreviewing] = useState(false)
   const [priority, setPriority] = useState<Priority>('medium')
   const [itemType, setItemType] = useState<ItemType>('unique')
   const [itemLevel, setItemLevel] = useState('')
   const [notes, setNotes] = useState('')
   const [saving, setSaving] = useState(false)
-  const [error, setError] = useState('')
-
-  const useWikiUrl = wikiUrl.trim().length > 0
-
-  async function handleUrlBlur() {
-    const name = parseWikiName(wikiUrl.trim())
-    if (!name) {
-      setPreview(null)
-      return
-    }
-    setPreviewing(true)
-    const data = await fetchPoeItem(name)
-    setPreview(data)
-    if (data) setItemType(mapClass(data.class))
-    setPreviewing(false)
-  }
-
-  function mapClass(cls: string): ItemType {
-    if (!cls) return 'unique'
-    const c = cls.toLowerCase()
-    if (c.includes('currency')) return 'base'
-    if (c.includes('gem')) return 'base'
-    return 'unique'
-  }
-
-  function resolvedName() {
-    if (useWikiUrl) return preview?.name ?? parseWikiName(wikiUrl.trim()) ?? ''
-    return manualName.trim()
-  }
 
   async function handleSubmit() {
-    const name = resolvedName()
-    if (!name) {
-      setError('Item name is required.')
+    if (!itemName.trim()) {
+      toast.error('Item name is required.')
       return
     }
     setSaving(true)
-    setError('')
     try {
-      await addWishlistItem({
+      await withTimeout(addWishlistItem({
         league_id: leagueId,
         user_id: userId,
-        item_name: name,
+        item_name: itemName.trim(),
         item_type: itemType,
-        wiki_url: wikiUrl.trim() || null,
+        wiki_url: extractWikiSlug(wikiUrl),
         item_level: itemLevel ? parseInt(itemLevel) : null,
-        required_mods: [],
         notes: notes.trim() || null,
         priority,
         status: 'needed',
+      }))
+      fetch('/api/discord-notify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'added',
+          actorDiscord: profile?.username,
+          itemName: itemName.trim(),
+          itemType: itemType,
+          priority: priority,
+          itemLevel: itemLevel ? parseInt(itemLevel) : null,
+          notes: notes.trim() || null,
+        }),
       })
+      toast.success('Item added!')
       handleClose()
       onAdded()
-    } catch {
-      setError('Failed to save item. Please try again.')
+    } catch (e) {
+      console.error('[addWishlistItem]', e)
+      toast.error('Failed to save item. Please try again.')
     } finally {
       setSaving(false)
     }
   }
 
   function handleClose() {
+    setItemName('')
     setWikiUrl('')
-    setManualName('')
-    setPreview(null)
     setPriority('medium')
     setItemType('unique')
     setItemLevel('')
     setNotes('')
-    setError('')
     onClose()
   }
 
@@ -122,42 +105,16 @@ export function AddItemDialog({ open, leagueId, userId, onClose, onAdded }: Prop
         </DialogHeader>
 
         <div className='space-y-4 py-2'>
-          {/* Wiki URL */}
+          {/* Item Name */}
           <div className='space-y-1.5'>
-            <Label>PoE Wiki URL (recommended)</Label>
+            <Label>Item Name</Label>
             <Input
-              placeholder='https://www.poewiki.net/wiki/Headhunter'
-              value={wikiUrl}
-              onChange={(e) => { setWikiUrl(e.target.value); setPreview(null) }}
-              onBlur={handleUrlBlur}
+              placeholder='e.g. Headhunter'
+              value={itemName}
+              onChange={(e) => setItemName(e.target.value)}
+              autoFocus
             />
-            <p className='text-xs text-muted-foreground'>Paste a link from poewiki.net to auto-fill item data.</p>
           </div>
-
-          {/* Preview */}
-          {useWikiUrl && (
-            <div className='min-h-8'>
-              {previewing ? (
-                <p className='text-xs text-muted-foreground'>Fetching item data...</p>
-              ) : preview ? (
-                <PoeItemTooltip item={preview} />
-              ) : parseWikiName(wikiUrl.trim()) ? (
-                <p className='text-xs text-destructive'>Item not found on the wiki.</p>
-              ) : null}
-            </div>
-          )}
-
-          {/* Manual name fallback */}
-          {!useWikiUrl && (
-            <div className='space-y-1.5'>
-              <Label>Item Name</Label>
-              <Input
-                placeholder='e.g. Crafted Rare Belt'
-                value={manualName}
-                onChange={(e) => setManualName(e.target.value)}
-              />
-            </div>
-          )}
 
           <div className='grid grid-cols-2 gap-3'>
             {/* Priority */}
@@ -188,6 +145,8 @@ export function AddItemDialog({ open, leagueId, userId, onClose, onAdded }: Prop
                   <SelectItem value='magic'>Magic</SelectItem>
                   <SelectItem value='normal'>Normal</SelectItem>
                   <SelectItem value='base'>Base</SelectItem>
+                  <SelectItem value='gem'>Gem</SelectItem>
+                  <SelectItem value='other'>Other</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -216,12 +175,22 @@ export function AddItemDialog({ open, leagueId, userId, onClose, onAdded }: Prop
             />
           </div>
 
-          {error && <p className='text-xs text-destructive'>{error}</p>}
+          {/* Wiki URL */}
+          <div className='space-y-1.5'>
+            <Label>PoE Wiki URL <span className='text-muted-foreground font-normal'>(optional)</span></Label>
+            <Input
+              placeholder='https://www.poewiki.net/wiki/Headhunter'
+              value={wikiUrl}
+              onChange={(e) => setWikiUrl(e.target.value)}
+            />
+          </div>
+
+
         </div>
 
         <DialogFooter>
           <Button variant='outline' onClick={handleClose} disabled={saving}>Cancel</Button>
-          <Button onClick={handleSubmit} disabled={saving || (!resolvedName())}>
+          <Button onClick={handleSubmit} disabled={saving || !itemName.trim()}>
             {saving ? 'Saving...' : 'Add Item'}
           </Button>
         </DialogFooter>
